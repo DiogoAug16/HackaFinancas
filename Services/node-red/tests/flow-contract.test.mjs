@@ -4,13 +4,15 @@ import { readFile } from "node:fs/promises";
 const root = new URL("../", import.meta.url);
 const flows = JSON.parse(await readFile(new URL("flows.json", root), "utf8"));
 const manifest = JSON.parse(await readFile(new URL("package.json", root), "utf8"));
+const settings = await readFile(new URL("settings.js", root), "utf8");
 const documentNode = flows.find((node) => node.id === "create-document");
 const healthNode = flows.find((node) => node.id === "health-check");
 
 assert.equal(manifest.dependencies["@ibm-cloud/cloudant"], "0.9.2");
 assert.equal(manifest.engines.node, "^20");
 assert.equal(manifest.devDependencies["node-red"], "4.1.10");
-assert.equal(manifest.scripts["start:local"], "node --env-file=.env ./node_modules/node-red/red.js --userDir .");
+assert.equal(manifest.scripts["start:local"], "node --env-file=.env ./node_modules/node-red/red.js --userDir . --settings settings.js");
+assert(settings.includes('flowFile: process.env.FLOWS || "flows.json"'));
 assert(documentNode?.func.includes("postDocument"), "document flow must save through the Cloudant SDK");
 assert(healthNode?.func.includes("getDatabaseInformation"), "health flow must verify Cloudant");
 

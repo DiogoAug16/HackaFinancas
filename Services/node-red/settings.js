@@ -6,5 +6,6 @@ if (!process.env.NODE_RED_CREDENTIAL_SECRET) {
 
 module.exports = {
     credentialSecret: process.env.NODE_RED_CREDENTIAL_SECRET,
+    flowFile: process.env.FLOWS || "flows.json",
     functionGlobalContext: { CloudantV1 }
 };

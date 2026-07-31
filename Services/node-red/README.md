@@ -15,8 +15,8 @@ npm install
 npm run start:local
 ```
 
-O comando carrega `.env` sem expor as credenciais no app. Acesse
-`http://localhost:1880`.
+O comando carrega `.env` e o fluxo versionado `flows.json`, sem expor as
+credenciais no app. Acesse `http://localhost:1880`.
 
 Com Docker:
 
