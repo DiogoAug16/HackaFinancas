@@ -15,3 +15,9 @@ xcuserdata/
 
 # VS Code
 .vscode/
+
+# Node-RED / Cloudant credentials and local state
+Services/node-red/.env
+Services/node-red/data/
+
+.env

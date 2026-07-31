@@ -1,0 +1,100 @@
+[
+  {
+    "id": "cloudant-tab",
+    "type": "tab",
+    "label": "Cloudant gateway",
+    "disabled": false,
+    "info": "O app iOS chama este gateway; somente o Node-RED conhece as credenciais do Cloudant."
+  },
+  {
+    "id": "health-in",
+    "type": "http in",
+    "z": "cloudant-tab",
+    "name": "Cloudant health",
+    "url": "/v1/health",
+    "method": "get",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 130,
+    "y": 100,
+    "wires": [["health-check"]]
+  },
+  {
+    "id": "health-check",
+    "type": "function",
+    "z": "cloudant-tab",
+    "name": "Check Cloudant",
+    "func": "const CloudantV1 = global.get(\"CloudantV1\");\nconst database = env.get(\"CLOUDANT_DATABASE\");\nconst cloudantUrl = env.get(\"CLOUDANT_URL\");\nconst cloudantApiKey = env.get(\"CLOUDANT_APIKEY\");\n\nif (!CloudantV1 || !cloudantUrl || !cloudantApiKey || !database) {\n    msg.statusCode = 503;\n    msg.payload = { error: \"Cloudant is not configured\" };\n    return msg;\n}\n\nCloudantV1.newInstance({}).getDatabaseInformation({ db: database })\n    .then(({ result }) => {\n        msg.statusCode = 200;\n        msg.payload = { status: \"ok\", database: result.db_name };\n        node.send(msg);\n        node.done();\n    })\n    .catch((error) => {\n        node.error(error.message, msg);\n        msg.statusCode = Number.isInteger(error.status) ? error.status : 502;\n        msg.payload = { error: \"Cloudant request failed\" };\n        node.send(msg);\n        node.done();\n    });\nreturn;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 360,
+    "y": 100,
+    "wires": [["health-out"]]
+  },
+  {
+    "id": "health-out",
+    "type": "http response",
+    "z": "cloudant-tab",
+    "name": "",
+    "statusCode": "",
+    "headers": {},
+    "x": 590,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "documents-in",
+    "type": "http in",
+    "z": "cloudant-tab",
+    "name": "Create document",
+    "url": "/v1/documents",
+    "method": "post",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 140,
+    "y": 180,
+    "wires": [["create-document"]]
+  },
+  {
+    "id": "create-document",
+    "type": "function",
+    "z": "cloudant-tab",
+    "name": "Save document in Cloudant",
+    "func": "const CloudantV1 = global.get(\"CloudantV1\");\nconst database = env.get(\"CLOUDANT_DATABASE\");\nconst cloudantUrl = env.get(\"CLOUDANT_URL\");\nconst cloudantApiKey = env.get(\"CLOUDANT_APIKEY\");\n\nif (!msg.payload || Array.isArray(msg.payload) || typeof msg.payload !== \"object\") {\n    msg.statusCode = 400;\n    msg.payload = { error: \"A JSON object is required\" };\n    node.send([null, msg]);\n    node.done();\n    return;\n}\n\nif (!CloudantV1 || !cloudantUrl || !cloudantApiKey || !database) {\n    msg.statusCode = 503;\n    msg.payload = { error: \"Cloudant is not configured\" };\n    node.send([null, msg]);\n    node.done();\n    return;\n}\n\nCloudantV1.newInstance({}).postDocument({ db: database, document: msg.payload })\n    .then(({ result, status }) => {\n        msg.statusCode = status || 201;\n        msg.payload = result;\n        node.send([msg, null]);\n        node.done();\n    })\n    .catch((error) => {\n        node.error(error.message, msg);\n        msg.statusCode = Number.isInteger(error.status) ? error.status : 502;\n        msg.payload = { error: \"Cloudant request failed\" };\n        node.send([null, msg]);\n        node.done();\n    });\nreturn;",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 380,
+    "y": 180,
+    "wires": [["documents-out"], ["documents-error-out"]]
+  },
+  {
+    "id": "documents-out",
+    "type": "http response",
+    "z": "cloudant-tab",
+    "name": "",
+    "statusCode": "",
+    "headers": {},
+    "x": 630,
+    "y": 160,
+    "wires": []
+  },
+  {
+    "id": "documents-error-out",
+    "type": "http response",
+    "z": "cloudant-tab",
+    "name": "",
+    "statusCode": "",
+    "headers": {},
+    "x": 640,
+    "y": 210,
+    "wires": []
+  }
+]

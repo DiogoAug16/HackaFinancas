@@ -19,6 +19,8 @@ targets:
       - path: Components
       - path: Models
       - path: Services
+        excludes:
+          - node-red
       - path: Utilities
       - path: Views
       - path: Assets.xcassets

@@ -1,0 +1,14 @@
+services:
+  node-red:
+    build: .
+    env_file: .env
+    environment:
+      FLOWS: flows.json
+      TZ: America/Cuiaba
+    ports:
+      - "127.0.0.1:1880:1880"
+    volumes:
+      - node_red_data:/data
+
+volumes:
+  node_red_data:

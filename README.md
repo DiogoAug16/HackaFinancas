@@ -63,6 +63,13 @@ Antes de distribuir uma atualização sobre uma versão já instalada, valide
 a migração abrindo no simulador ou aparelho uma base criada pela versão
 anterior.
 
+## Gateway para banco não relacional
+
+O serviço [Node-RED](Services/node-red/README.md) faz a ponte entre o app e o
+IBM Cloudant. As credenciais ficam somente no ambiente do serviço, nunca no
+aplicativo iOS. O gateway disponibiliza uma rota de saúde e uma rota para criar
+documentos JSON.
+
 ## Inteligência financeira
 
 A integração com IA não está habilitada nesta versão. Ela deve ser feita
