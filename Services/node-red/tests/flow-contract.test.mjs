@@ -5,60 +5,38 @@ const root = new URL("../", import.meta.url);
 const flows = JSON.parse(await readFile(new URL("flows.json", root), "utf8"));
 const manifest = JSON.parse(await readFile(new URL("package.json", root), "utf8"));
 const settings = await readFile(new URL("settings.js", root), "utf8");
-const documentNode = flows.find((node) => node.id === "create-document");
-const healthNode = flows.find((node) => node.id === "health-check");
+const find = (id) => flows.find((node) => node.id === id);
 
-assert.equal(manifest.dependencies["@ibm-cloud/cloudant"], "0.9.2");
+assert.equal(manifest.dependencies["node-red-contrib-cloudantplus"], "2.0.6");
+assert.equal(manifest.dependencies["@ibm-cloud/cloudant"], undefined);
 assert.equal(manifest.engines.node, "^20");
 assert.equal(manifest.devDependencies["node-red"], "4.1.10");
 assert.equal(manifest.scripts["start:local"], "node --env-file=.env ./node_modules/node-red/red.js --userDir . --settings settings.js");
 assert(settings.includes('flowFile: process.env.FLOWS || "flows.json"'));
-assert(documentNode?.func.includes("postDocument"), "document flow must save through the Cloudant SDK");
-assert(healthNode?.func.includes("getDatabaseInformation"), "health flow must verify Cloudant");
+assert(!settings.includes("functionGlobalContext"));
 
-async function run(nodeConfig, payload, environment, service) {
-    const messages = [];
-    const errors = [];
-    let finish;
-    const done = new Promise((resolve) => { finish = resolve; });
-    const fn = new Function("msg", "env", "global", "node", nodeConfig.func);
-    fn(
-        { payload },
-        { get: (key) => environment[key] },
-        { get: (key) => key === "CloudantV1" ? service : undefined },
-        { send: (message) => messages.push(message), error: (message) => errors.push(message), done: finish }
-    );
-    await done;
-    return { messages, errors };
+const connection = find("cloudant-connection");
+assert.equal(connection?.type, "cloudantplus");
+assert.equal(connection?.host, "${CLOUDANT_URL}");
+assert.equal(connection?.useapikey, true);
+assert.equal(find("cloudant-server-info")?.operation, "server");
+assert.equal(find("cloudant-database-list")?.operation, "dblist");
+assert.equal(find("cloudant-document-out")?.type, "cloudantplus out");
+assert.equal(find("documents-in")?.url, "/v1/databases/:database/documents");
+
+function run(nodeConfig, message) {
+    return new Function("msg", nodeConfig.func)(message);
 }
 
-const configured = {
-    CLOUDANT_DATABASE: "hackafinancas",
-    CLOUDANT_URL: "https://example.cloudant.com",
-    CLOUDANT_APIKEY: "test-key"
-};
-const response = { result: { ok: true, id: "expense-1", rev: "1-a" }, status: 201 };
-let saved;
-const service = {
-    newInstance: () => ({
-        postDocument: async (request) => { saved = request; return response; },
-        getDatabaseInformation: async () => ({ result: { db_name: "hackafinancas" } })
-    })
-};
+const validateTarget = find("validate-document-target");
+const invalidName = run(validateTarget, { req: { params: { database: "Invalid Name" } }, payload: {} });
+assert.equal(invalidName[1].statusCode, 400);
 
-const invalid = await run(documentNode, [], configured, service);
-assert.equal(invalid.messages[0][1].statusCode, 400);
+const invalidDocument = run(validateTarget, { req: { params: { database: "hackafinancas" } }, payload: [] });
+assert.equal(invalidDocument[1].statusCode, 400);
 
-const missing = await run(documentNode, { amount: 10 }, {}, service);
-assert.equal(missing.messages[0][1].statusCode, 503);
+const document = { req: { params: { database: "hackafinancas" } }, payload: { amount: 10 } };
+const validDocument = run(validateTarget, document);
+assert.equal(validDocument[0].database, "hackafinancas");
 
-const created = await run(documentNode, { type: "expense", amount: 10 }, configured, service);
-assert.deepEqual(saved, { db: "hackafinancas", document: { type: "expense", amount: 10 } });
-assert.equal(created.messages[0][0].statusCode, 201);
-assert.deepEqual(created.messages[0][0].payload, response.result);
-
-const healthy = await run(healthNode, undefined, configured, service);
-assert.equal(healthy.messages[0].statusCode, 200);
-assert.deepEqual(healthy.messages[0].payload, { status: "ok", database: "hackafinancas" });
-
-console.log("Node-RED Cloudant flow contract: OK");
+console.log("Node-RED CloudantPlus flow contract: OK");

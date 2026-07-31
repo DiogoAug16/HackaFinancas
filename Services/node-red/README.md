@@ -1,45 +1,46 @@
 # Node-RED + IBM Cloudant
 
-Este serviço é o único componente que recebe as credenciais do Cloudant. O app
-iOS deve chamar o gateway, nunca o Cloudant diretamente.
+Este serviço usa `node-red-contrib-cloudantplus`. O app iOS chama o gateway,
+nunca o Cloudant diretamente.
 
 ## Executar localmente
 
-Sem Docker, instale o Node.js 20 LTS apenas no perfil do usuário e execute:
+Sem Docker, instale o Node.js 20 LTS no perfil do usuário e execute:
 
 ```sh
 cd Services/node-red
 cp .env.example .env
-# preencha CLOUDANT_URL, CLOUDANT_APIKEY e CLOUDANT_DATABASE
+# preencha CLOUDANT_URL
 npm install
 npm run start:local
 ```
 
-O comando carrega `.env` e o fluxo versionado `flows.json`, sem expor as
-credenciais no app. Acesse `http://localhost:1880`.
+Abra `http://localhost:1880`. No editor, abra o nó de configuração **IBM
+Cloudant**, marque **Authenticate with API Key?** e informe a API key. O
+Node-RED a salva criptografada com `NODE_RED_CREDENTIAL_SECRET`; ela não entra
+no Git nem no app iOS.
 
 Com Docker:
 
 ```sh
 cd Services/node-red
 cp .env.example .env
-# preencha CLOUDANT_URL, CLOUDANT_APIKEY e CLOUDANT_DATABASE
+# preencha CLOUDANT_URL
 docker compose up --build
 ```
 
-O editor fica em `http://localhost:1880`. A porta é limitada a `127.0.0.1`,
-portanto não fica acessível pela rede local. Para publicar o gateway, coloque-o
-atrás de HTTPS e autenticação antes de expor qualquer rota.
+A porta fica limitada a `127.0.0.1`. Para publicar o gateway, coloque-o atrás
+de HTTPS e autenticação.
 
 ## Contrato do gateway
 
-`GET /v1/health` confirma a comunicação com o banco configurado e retorna
-`{"status":"ok","database":"..."}`.
+`GET /v1/health` confirma a conexão com a instância Cloudant.
 
-`POST /v1/documents` recebe um objeto JSON e cria um documento no banco
-`CLOUDANT_DATABASE`. Retorna a resposta de criação do Cloudant, como
-`{"ok":true,"id":"...","rev":"..."}`. O endpoint rejeita arrays e valores
-que não sejam objetos.
+`GET /v1/databases` lista os bancos disponíveis. Não exige nome de banco na
+configuração.
+
+`POST /v1/databases/:database/documents` cria um documento JSON. O nome do
+banco vem na rota e o CloudantPlus o cria quando a API key tiver permissão.
 
 ## Verificação
 
@@ -48,5 +49,4 @@ npm test
 NODE_RED_URL=http://localhost:1880 npm run eval
 ```
 
-O teste é local e simula o SDK. O eval consulta somente `/v1/health`, sem criar
-ou alterar documentos; ele falha se o Node-RED não alcançar o Cloudant.
+O eval consulta somente `/v1/health`; ele não cria nem altera documentos.
