@@ -9,8 +9,8 @@
   {
     "id": "cloudant-connection",
     "type": "cloudantplus",
-    "name": "IBM Cloudant",
     "host": "${CLOUDANT_URL}",
+    "name": "IBM Cloudant",
     "useapikey": true
   },
   {
@@ -24,7 +24,11 @@
     "swaggerDoc": "",
     "x": 130,
     "y": 100,
-    "wires": [["cloudant-server-info"]]
+    "wires": [
+      [
+        "cloudant-server-info"
+      ]
+    ]
   },
   {
     "id": "cloudant-server-info",
@@ -35,10 +39,13 @@
     "database": "",
     "service": "_ext_",
     "operation": "server",
-    "payonly": false,
     "x": 370,
     "y": 100,
-    "wires": [["health-response"]]
+    "wires": [
+      [
+        "health-response"
+      ]
+    ]
   },
   {
     "id": "health-response",
@@ -54,7 +61,11 @@
     "libs": [],
     "x": 600,
     "y": 100,
-    "wires": [["health-out"]]
+    "wires": [
+      [
+        "health-out"
+      ]
+    ]
   },
   {
     "id": "health-out",
@@ -78,7 +89,11 @@
     "swaggerDoc": "",
     "x": 150,
     "y": 180,
-    "wires": [["cloudant-database-list"]]
+    "wires": [
+      [
+        "cloudant-database-list"
+      ]
+    ]
   },
   {
     "id": "cloudant-database-list",
@@ -89,10 +104,13 @@
     "database": "",
     "service": "_ext_",
     "operation": "dblist",
-    "payonly": false,
     "x": 380,
     "y": 180,
-    "wires": [["databases-response"]]
+    "wires": [
+      [
+        "databases-response"
+      ]
+    ]
   },
   {
     "id": "databases-response",
@@ -108,7 +126,11 @@
     "libs": [],
     "x": 620,
     "y": 180,
-    "wires": [["databases-out"]]
+    "wires": [
+      [
+        "databases-out"
+      ]
+    ]
   },
   {
     "id": "databases-out",
@@ -132,7 +154,11 @@
     "swaggerDoc": "",
     "x": 170,
     "y": 260,
-    "wires": [["validate-document-target"]]
+    "wires": [
+      [
+        "validate-document-target"
+      ]
+    ]
   },
   {
     "id": "validate-document-target",
@@ -148,7 +174,14 @@
     "libs": [],
     "x": 420,
     "y": 260,
-    "wires": [["cloudant-document-out"], ["documents-error-out"]]
+    "wires": [
+      [
+        "cloudant-document-out"
+      ],
+      [
+        "documents-error-out"
+      ]
+    ]
   },
   {
     "id": "cloudant-document-out",
@@ -162,7 +195,11 @@
     "operation": "insert",
     "x": 670,
     "y": 240,
-    "wires": [["documents-response"]]
+    "wires": [
+      [
+        "documents-response"
+      ]
+    ]
   },
   {
     "id": "documents-response",
@@ -178,7 +215,11 @@
     "libs": [],
     "x": 910,
     "y": 240,
-    "wires": [["documents-out"]]
+    "wires": [
+      [
+        "documents-out"
+      ]
+    ]
   },
   {
     "id": "documents-out",
@@ -207,11 +248,19 @@
     "type": "catch",
     "z": "cloudant-tab",
     "name": "Cloudant errors",
-    "scope": ["cloudant-server-info", "cloudant-database-list", "cloudant-document-out"],
+    "scope": [
+      "cloudant-server-info",
+      "cloudant-database-list",
+      "cloudant-document-out"
+    ],
     "uncaught": false,
     "x": 140,
     "y": 350,
-    "wires": [["cloudant-error-response"]]
+    "wires": [
+      [
+        "cloudant-error-response"
+      ]
+    ]
   },
   {
     "id": "cloudant-error-response",
@@ -227,7 +276,11 @@
     "libs": [],
     "x": 390,
     "y": 350,
-    "wires": [["cloudant-error-out"]]
+    "wires": [
+      [
+        "cloudant-error-out"
+      ]
+    ]
   },
   {
     "id": "cloudant-error-out",
