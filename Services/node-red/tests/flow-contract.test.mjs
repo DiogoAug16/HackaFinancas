@@ -9,6 +9,8 @@ const healthNode = flows.find((node) => node.id === "health-check");
 
 assert.equal(manifest.dependencies["@ibm-cloud/cloudant"], "0.9.2");
 assert.equal(manifest.engines.node, "^20");
+assert.equal(manifest.devDependencies["node-red"], "4.1.10");
+assert.equal(manifest.scripts["start:local"], "node --env-file=.env ./node_modules/node-red/red.js --userDir .");
 assert(documentNode?.func.includes("postDocument"), "document flow must save through the Cloudant SDK");
 assert(healthNode?.func.includes("getDatabaseInformation"), "health flow must verify Cloudant");
 

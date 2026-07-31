@@ -19,5 +19,6 @@ xcuserdata/
 # Node-RED / Cloudant credentials and local state
 Services/node-red/.env
 Services/node-red/data/
+Services/node-red/node_modules/
 
 .env

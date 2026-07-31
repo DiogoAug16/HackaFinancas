@@ -5,8 +5,23 @@ iOS deve chamar o gateway, nunca o Cloudant diretamente.
 
 ## Executar localmente
 
+Sem Docker, instale o Node.js 20 LTS apenas no perfil do usuário e execute:
+
 ```sh
-cd services/node-red
+cd Services/node-red
+cp .env.example .env
+# preencha CLOUDANT_URL, CLOUDANT_APIKEY e CLOUDANT_DATABASE
+npm install
+npm run start:local
+```
+
+O comando carrega `.env` sem expor as credenciais no app. Acesse
+`http://localhost:1880`.
+
+Com Docker:
+
+```sh
+cd Services/node-red
 cp .env.example .env
 # preencha CLOUDANT_URL, CLOUDANT_APIKEY e CLOUDANT_DATABASE
 docker compose up --build
