@@ -67,4 +67,25 @@ const remove = run("prepare-document-delete", { req: { params: { database: "hack
 assert.equal(remove[0].operation, "delete");
 assert.deepEqual(remove[0].payload, { _id: "expense-1", _rev: "2-b" });
 
+const emptyDatabase = run("cloudant-error-response", {
+    req: {
+        method: "GET",
+        params: { database: "hackafinancas" }
+    },
+    res: {},
+    error: { message: "Error: not_found" }
+});
+assert.equal(emptyDatabase.statusCode, 200);
+assert.deepEqual(emptyDatabase.payload, { documents: [] });
+
+const cloudantFailure = run("cloudant-error-response", {
+    req: {
+        method: "GET",
+        params: { database: "hackafinancas" }
+    },
+    res: {},
+    error: { message: "network error" }
+});
+assert.equal(cloudantFailure.statusCode, 502);
+
 console.log("Node-RED Cloudant CRUD flow contract: OK");
