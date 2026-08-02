@@ -25,3 +25,7 @@ Services/node-red/.flows*.backup
 Services/node-red/flows_*.json
 
 .env
+Secrets.xcconfig
+**/Info.plist
+
+HackaFinancas-Info.plist
