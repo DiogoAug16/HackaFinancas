@@ -39,14 +39,29 @@ de HTTPS e autenticação.
 `GET /v1/databases` lista os bancos disponíveis. Não exige nome de banco na
 configuração.
 
+`GET /v1/databases/:database/documents?limit=100` lista até 200 documentos.
+O parâmetro `limit` é opcional e aceita inteiros de 1 a 200.
+
 `POST /v1/databases/:database/documents` cria um documento JSON. O nome do
 banco vem na rota e o CloudantPlus o cria quando a API key tiver permissão.
+O corpo pode incluir `_id`, mas não `_rev`.
+
+`GET /v1/databases/:database/documents/:document` retorna um documento,
+incluindo `_rev`.
+
+`PUT /v1/databases/:database/documents/:document` substitui um documento. O
+corpo precisa conter o mesmo `_id` da rota e o `_rev` atual. Esse requisito
+evita que uma edição apague outra edição concorrente.
+
+`DELETE /v1/databases/:database/documents/:document?rev=<rev>` remove um
+documento. Passe o `_rev` retornado pelo `GET` ou `PUT`.
 
 ## Verificação
 
 ```sh
 npm test
-NODE_RED_URL=http://localhost:1880 npm run eval
+NODE_RED_URL=http://localhost:1880 CLOUDANT_EVAL_DATABASE=hackafinancas_eval npm run eval
 ```
 
-O eval consulta somente `/v1/health`; ele não cria nem altera documentos.
+O eval cria, lê, atualiza e remove um documento com ID aleatório no banco
+informado. Use um banco exclusivo de avaliação.

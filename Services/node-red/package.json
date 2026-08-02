@@ -11,7 +11,7 @@
   "scripts": {
     "start:local": "node --env-file=.env ./node_modules/node-red/red.js --userDir . --settings settings.js",
     "test": "node tests/flow-contract.test.mjs",
-    "eval": "node evals/cloudant-health.eval.mjs"
+    "eval": "node evals/cloudant-crud.eval.mjs"
   },
   "devDependencies": {
     "node-red": "4.1.10"

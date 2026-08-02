@@ -67,8 +67,8 @@ anterior.
 
 O serviço [Node-RED](Services/node-red/README.md) faz a ponte entre o app e o
 IBM Cloudant. As credenciais ficam somente no ambiente do serviço, nunca no
-aplicativo iOS. O gateway disponibiliza uma rota de saúde e uma rota para criar
-documentos JSON.
+aplicativo iOS. O gateway disponibiliza rotas de saúde e CRUD de documentos
+JSON.
 
 ## Inteligência financeira
 
