@@ -873,7 +873,8 @@ struct ExpenseDetailView: View {
             previousImageIdentifier
         var createdImageIdentifier: String?
 
-        do {
+        Task {
+            do {
             let targetExpenses =
                 try expensesToEdit(
                     scope: scope,
@@ -925,6 +926,10 @@ struct ExpenseDetailView: View {
                 if targetExpense.id == expense.id {
                     targetExpense.date = date
                 }
+
+                try await CloudantStore.shared.save(
+                    targetExpense
+                )
             }
 
             try modelContext.save()
@@ -949,15 +954,16 @@ struct ExpenseDetailView: View {
             ) {
                 isEditing = false
             }
-        } catch {
-            modelContext.rollback()
-            ExpenseImageStore.shared.delete(
-                createdImageIdentifier
-            )
-            errorTitle =
-                "Não foi possível salvar o gasto"
-            saveError = error.localizedDescription
-            resetDraft()
+            } catch {
+                modelContext.rollback()
+                ExpenseImageStore.shared.delete(
+                    createdImageIdentifier
+                )
+                errorTitle =
+                    "Não foi possível salvar o gasto"
+                saveError = error.localizedDescription
+                resetDraft()
+            }
         }
     }
 
@@ -1062,23 +1068,29 @@ struct ExpenseDetailView: View {
         let imageIdentifier =
             expense.imageIdentifier
 
-        do {
-            try TrackedItemLinkService
-                .unlinkItems(
-                    linkedTo: [expense.id],
-                    in: modelContext
+        Task {
+            do {
+                let unlinkedItems = try TrackedItemLinkService
+                    .unlinkItems(
+                        linkedTo: [expense.id],
+                        in: modelContext
+                    )
+                for item in unlinkedItems {
+                    try await CloudantStore.shared.save(item)
+                }
+                try await CloudantStore.shared.delete(expense)
+                modelContext.delete(expense)
+                try modelContext.save()
+                removeImageIfUnreferenced(
+                    imageIdentifier
                 )
-            modelContext.delete(expense)
-            try modelContext.save()
-            removeImageIfUnreferenced(
-                imageIdentifier
-            )
-            dismiss()
-        } catch {
-            modelContext.rollback()
-            errorTitle =
-                "Não foi possível excluir o gasto"
-            saveError = error.localizedDescription
+                dismiss()
+            } catch {
+                modelContext.rollback()
+                errorTitle =
+                    "Não foi possível excluir o gasto"
+                saveError = error.localizedDescription
+            }
         }
     }
 
@@ -1088,47 +1100,51 @@ struct ExpenseDetailView: View {
             return
         }
 
-        do {
-            let descriptor = FetchDescriptor<Expense>()
-            let seriesExpenses = try modelContext
-                .fetch(descriptor)
-                .filter {
-                    $0.seriesID == seriesID
+        Task {
+            do {
+                let descriptor = FetchDescriptor<Expense>()
+                let seriesExpenses = try modelContext
+                    .fetch(descriptor)
+                    .filter {
+                        $0.seriesID == seriesID
+                    }
+                let imageIdentifiers = Set(
+                    seriesExpenses.compactMap(
+                        \.imageIdentifier
+                    )
+                )
+                let expenseIDs = Set(
+                    seriesExpenses.map(\.id)
+                )
+                let unlinkedItems = try TrackedItemLinkService
+                    .unlinkItems(
+                        linkedTo: expenseIDs,
+                        in: modelContext
+                    )
+
+                for item in unlinkedItems {
+                    try await CloudantStore.shared.save(item)
                 }
-            let imageIdentifiers = Set(
-                seriesExpenses.compactMap(
-                    \.imageIdentifier
-                )
-            )
-            let expenseIDs = Set(
-                seriesExpenses.map(\.id)
-            )
+                for seriesExpense in seriesExpenses {
+                    try await CloudantStore.shared.delete(
+                        seriesExpense
+                    )
+                    modelContext.delete(seriesExpense)
+                }
 
-            try TrackedItemLinkService
-                .unlinkItems(
-                    linkedTo: expenseIDs,
-                    in: modelContext
-                )
+                try modelContext.save()
 
-            for seriesExpense in seriesExpenses {
-                modelContext.delete(seriesExpense)
+                for imageIdentifier in imageIdentifiers {
+                    removeImageIfUnreferenced(imageIdentifier)
+                }
+
+                dismiss()
+            } catch {
+                modelContext.rollback()
+                errorTitle =
+                    "Não foi possível excluir a série"
+                saveError = error.localizedDescription
             }
-
-            try modelContext.save()
-
-            for imageIdentifier
-                in imageIdentifiers {
-                removeImageIfUnreferenced(
-                    imageIdentifier
-                )
-            }
-
-            dismiss()
-        } catch {
-            modelContext.rollback()
-            errorTitle =
-                "Não foi possível excluir a série"
-            saveError = error.localizedDescription
         }
     }
 

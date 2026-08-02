@@ -56,6 +56,10 @@ evita que uma edição apague outra edição concorrente.
 `DELETE /v1/databases/:database/documents/:document?rev=<rev>` remove um
 documento. Passe o `_rev` retornado pelo `GET` ou `PUT`.
 
+O app usa o banco `hackafinancas`. O primeiro cadastro o cria. Em aparelhos
+físicos, informe no app o IP da máquina que executa o Node-RED, por exemplo
+`http://192.168.0.10:1880`; `localhost` funciona apenas no mesmo computador.
+
 ## Verificação
 
 ```sh

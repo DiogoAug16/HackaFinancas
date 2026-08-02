@@ -28,6 +28,7 @@
 		47DAA17BA06D50FE921A6253 /* ExpenseVisualPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB7C28C884F2A7BD7F505543 /* ExpenseVisualPicker.swift */; };
 		4BAB80D5D64B5202EC65441E /* TrackedItemLinkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A2CD372B60D9701857F315C /* TrackedItemLinkService.swift */; };
 		4C02047CAE1A3B286005E2CF /* ExpenseImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7D21CF052891BE76544B97B /* ExpenseImageStore.swift */; };
+		C10DAA700000000000000001 /* CloudantStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10DAA700000000000000002 /* CloudantStore.swift */; };
 		51677DCD683DAE3330487DEC /* IncomeCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C7ACE4F5C7CFFE7FEC8016D /* IncomeCategory.swift */; };
 		51A02A8DB2129C34492222D0 /* AppVisual.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1847A8B69A9A713D7F48CCDE /* AppVisual.swift */; };
 		53B96500E0FCEDAD2E2BF303 /* ExpenseReportPeriod.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA08ADAD36C3C569E7B1803 /* ExpenseReportPeriod.swift */; };
@@ -123,6 +124,7 @@
 		AA0E71461FC6F04448023DB2 /* PredictiveProjectionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictiveProjectionCard.swift; sourceTree = "<group>"; };
 		AAEF0B4905F848916D8423E7 /* ExpenseFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseFormView.swift; sourceTree = "<group>"; };
 		B7D21CF052891BE76544B97B /* ExpenseImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseImageStore.swift; sourceTree = "<group>"; };
+		C10DAA700000000000000002 /* CloudantStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudantStore.swift; sourceTree = "<group>"; };
 		B7EF91E7F9627F99FD08C7AC /* HackaFinancasTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HackaFinancasTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BFA08ADAD36C3C569E7B1803 /* ExpenseReportPeriod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseReportPeriod.swift; sourceTree = "<group>"; };
 		C5B1C03EA7FBEDB934D715C9 /* HackaFinancasApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HackaFinancasApp.swift; sourceTree = "<group>"; };
@@ -165,6 +167,7 @@
 		1CC23E12C3DBD868CD5A2B8F /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				C10DAA700000000000000002 /* CloudantStore.swift */,
 				F7B7217D7AD4D0DD34374B5C /* AppImageReferenceService.swift */,
 				E14A713508948F40203725AA /* DatabaseSeeder.swift */,
 				B7D21CF052891BE76544B97B /* ExpenseImageStore.swift */,
@@ -451,6 +454,7 @@
 				80B9B9F2AB688650142024D6 /* ExpenseDetailView.swift in Sources */,
 				1DC126DAC0E65123DD709B87 /* ExpenseFormView.swift in Sources */,
 				4C02047CAE1A3B286005E2CF /* ExpenseImageStore.swift in Sources */,
+				C10DAA700000000000000001 /* CloudantStore.swift in Sources */,
 				3685BBC5A1D8136FAC3BC7DE /* ExpenseListView.swift in Sources */,
 				5F8FE84D2DC8DCCDB22F504F /* ExpensePredictiveService.swift in Sources */,
 				53B96500E0FCEDAD2E2BF303 /* ExpenseReportPeriod.swift in Sources */,
@@ -570,7 +574,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = br.com.arthur.HackaFinancasTests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HackaFinancas.app/HackaFinancas";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Hacka Financas.app/Hacka Financas";
 			};
 			name = Debug;
 		};
@@ -583,6 +587,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Hacka Financas";
+				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "O app acessa o gateway Cloudant da rede do laboratório.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -670,6 +676,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Hacka Financas";
+				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "O app acessa o gateway Cloudant da rede do laboratório.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -697,7 +705,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = br.com.arthur.HackaFinancasTests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HackaFinancas.app/HackaFinancas";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Hacka Financas.app/Hacka Financas";
 			};
 			name = Release;
 		};

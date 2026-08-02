@@ -518,77 +518,84 @@ struct IncomeFormView: View {
                 in: .whitespacesAndNewlines
             )
 
-        do {
-            if let entry {
-                let originalDate = entry.date
-                let targetEntries =
-                    try entriesToEdit(
-                        scope: scope,
-                        originalDate: originalDate
-                    )
+        Task {
+            do {
+                if let entry {
+                    let originalDate = entry.date
+                    let targetEntries =
+                        try entriesToEdit(
+                            scope: scope,
+                            originalDate: originalDate
+                        )
 
-                for targetEntry in targetEntries {
-                    targetEntry.title =
-                        normalizedTitle
-                    targetEntry.amountInCents =
-                        amountInCents
-                    targetEntry.category = category
-                    targetEntry.notes =
-                        normalizedNotes
+                    for targetEntry in targetEntries {
+                        targetEntry.title =
+                            normalizedTitle
+                        targetEntry.amountInCents =
+                            amountInCents
+                        targetEntry.category = category
+                        targetEntry.notes =
+                            normalizedNotes
 
-                    if targetEntry.id == entry.id {
-                        targetEntry.date = date
-                        targetEntry.receivedAt =
-                            isReceived
+                        if targetEntry.id == entry.id {
+                            targetEntry.date = date
+                            targetEntry.receivedAt =
+                                isReceived
+                                ? receivedAt
+                                : nil
+                        }
+
+                        try await CloudantStore.shared.save(
+                            targetEntry
+                        )
+                    }
+                } else {
+                    let seriesID =
+                        recurrence.isRecurring
+                        ? UUID()
+                        : nil
+                    let endDate =
+                        recurrence.isRecurring
+                        ? recurrenceEndDate
+                        : nil
+
+                    for (
+                        index,
+                        occurrenceDate
+                    ) in recurrenceDates.enumerated() {
+                        let occurrenceReceivedAt =
+                            isReceived && index == 0
                             ? receivedAt
                             : nil
+                        let newEntry = IncomeEntry(
+                            title: normalizedTitle,
+                            amountInCents:
+                                amountInCents,
+                            date: occurrenceDate,
+                            category: category,
+                            notes: normalizedNotes,
+                            recurrence: recurrence,
+                            seriesID: seriesID,
+                            endDate: endDate,
+                            receivedAt:
+                                occurrenceReceivedAt
+                        )
+
+                        try await CloudantStore.shared.save(
+                            newEntry
+                        )
+                        modelContext.insert(newEntry)
                     }
                 }
-            } else {
-                let seriesID =
-                    recurrence.isRecurring
-                    ? UUID()
-                    : nil
-                let endDate =
-                    recurrence.isRecurring
-                    ? recurrenceEndDate
-                    : nil
 
-                for (
-                    index,
-                    occurrenceDate
-                ) in recurrenceDates.enumerated() {
-                    let occurrenceReceivedAt =
-                        isReceived && index == 0
-                        ? receivedAt
-                        : nil
-                    let newEntry = IncomeEntry(
-                        title: normalizedTitle,
-                        amountInCents:
-                            amountInCents,
-                        date: occurrenceDate,
-                        category: category,
-                        notes: normalizedNotes,
-                        recurrence: recurrence,
-                        seriesID: seriesID,
-                        endDate: endDate,
-                        receivedAt:
-                            occurrenceReceivedAt
-                    )
-
-                    modelContext.insert(
-                        newEntry
-                    )
-                }
+                try modelContext.save()
+                dismiss()
+            } catch {
+                modelContext.rollback()
+                isSaving = false
+                saveError =
+                    error.localizedDescription
             }
-
-            try modelContext.save()
-            dismiss()
-        } catch {
-            modelContext.rollback()
-            isSaving = false
-            saveError =
-                error.localizedDescription
         }
     }
 

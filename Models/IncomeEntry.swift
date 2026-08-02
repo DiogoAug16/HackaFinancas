@@ -14,6 +14,7 @@ final class IncomeEntry {
     var seriesID: UUID?
     var endDate: Date?
     var receivedAt: Date?
+    var cloudantRevision: String?
 
     init(
         title: String,
@@ -44,6 +45,7 @@ final class IncomeEntry {
             ? endDate
             : nil
         self.receivedAt = receivedAt
+        self.cloudantRevision = nil
     }
 
     var category: IncomeCategory {

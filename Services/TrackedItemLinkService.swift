@@ -19,13 +19,15 @@ enum TrackedItemLinkService {
     static func unlinkItems(
         linkedTo expenseIDs: Set<UUID>,
         in modelContext: ModelContext
-    ) throws {
+    ) throws -> [TrackedItem] {
         guard !expenseIDs.isEmpty else {
-            return
+            return []
         }
 
         let descriptor =
             FetchDescriptor<TrackedItem>()
+
+        var unlinkedItems: [TrackedItem] = []
 
         for item in try modelContext
             .fetch(descriptor) {
@@ -40,6 +42,9 @@ enum TrackedItemLinkService {
             }
 
             item.sourceExpenseID = nil
+            unlinkedItems.append(item)
         }
+
+        return unlinkedItems
     }
 }

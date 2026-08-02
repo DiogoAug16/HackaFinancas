@@ -8,6 +8,7 @@ final class UsageRecord {
     var notes: String
     var createdAt: Date
     var item: TrackedItem?
+    var cloudantRevision: String?
 
     init(
         usedAt: Date = .now,
@@ -19,5 +20,6 @@ final class UsageRecord {
         self.notes = notes
         self.createdAt = .now
         self.item = item
+        self.cloudantRevision = nil
     }
 }

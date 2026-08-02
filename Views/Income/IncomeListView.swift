@@ -673,14 +673,15 @@ struct IncomeListView: View {
     private func delete(
         _ entry: IncomeEntry
     ) {
-        modelContext.delete(entry)
-
-        do {
-            try modelContext.save()
-        } catch {
-            modelContext.rollback()
-            operationError =
-                error.localizedDescription
+        Task {
+            do {
+                try await CloudantStore.shared.delete(entry)
+                modelContext.delete(entry)
+                try modelContext.save()
+            } catch {
+                modelContext.rollback()
+                operationError = error.localizedDescription
+            }
         }
     }
 
@@ -692,25 +693,29 @@ struct IncomeListView: View {
             return
         }
 
-        do {
-            let descriptor =
-                FetchDescriptor<IncomeEntry>()
-            let seriesEntries =
-                try modelContext
-                    .fetch(descriptor)
-                    .filter {
-                        $0.seriesID == seriesID
-                    }
+        Task {
+            do {
+                let descriptor =
+                    FetchDescriptor<IncomeEntry>()
+                let seriesEntries =
+                    try modelContext
+                        .fetch(descriptor)
+                        .filter {
+                            $0.seriesID == seriesID
+                        }
 
-            for seriesEntry in seriesEntries {
-                modelContext.delete(seriesEntry)
+                for seriesEntry in seriesEntries {
+                    try await CloudantStore.shared.delete(
+                        seriesEntry
+                    )
+                    modelContext.delete(seriesEntry)
+                }
+
+                try modelContext.save()
+            } catch {
+                modelContext.rollback()
+                operationError = error.localizedDescription
             }
-
-            try modelContext.save()
-        } catch {
-            modelContext.rollback()
-            operationError =
-                error.localizedDescription
         }
     }
 

@@ -479,20 +479,26 @@ struct ExpenseListView: View {
         let imageIdentifier =
             expense.imageIdentifier
 
-        do {
-            try TrackedItemLinkService
-                .unlinkItems(
-                    linkedTo: [expense.id],
-                    in: modelContext
+        Task {
+            do {
+                let unlinkedItems = try TrackedItemLinkService
+                    .unlinkItems(
+                        linkedTo: [expense.id],
+                        in: modelContext
+                    )
+                for item in unlinkedItems {
+                    try await CloudantStore.shared.save(item)
+                }
+                try await CloudantStore.shared.delete(expense)
+                modelContext.delete(expense)
+                try modelContext.save()
+                removeImageIfUnreferenced(
+                    imageIdentifier
                 )
-            modelContext.delete(expense)
-            try modelContext.save()
-            removeImageIfUnreferenced(
-                imageIdentifier
-            )
-        } catch {
-            modelContext.rollback()
-            operationError = error.localizedDescription
+            } catch {
+                modelContext.rollback()
+                operationError = error.localizedDescription
+            }
         }
     }
 
@@ -504,43 +510,47 @@ struct ExpenseListView: View {
             return
         }
 
-        do {
-            let descriptor = FetchDescriptor<Expense>()
-            let seriesExpenses = try modelContext
-                .fetch(descriptor)
-                .filter {
-                    $0.seriesID == seriesID
+        Task {
+            do {
+                let descriptor = FetchDescriptor<Expense>()
+                let seriesExpenses = try modelContext
+                    .fetch(descriptor)
+                    .filter {
+                        $0.seriesID == seriesID
+                    }
+                let imageIdentifiers = Set(
+                    seriesExpenses.compactMap(
+                        \.imageIdentifier
+                    )
+                )
+                let expenseIDs = Set(
+                    seriesExpenses.map(\.id)
+                )
+                let unlinkedItems = try TrackedItemLinkService
+                    .unlinkItems(
+                        linkedTo: expenseIDs,
+                        in: modelContext
+                    )
+
+                for item in unlinkedItems {
+                    try await CloudantStore.shared.save(item)
                 }
-            let imageIdentifiers = Set(
-                seriesExpenses.compactMap(
-                    \.imageIdentifier
-                )
-            )
-            let expenseIDs = Set(
-                seriesExpenses.map(\.id)
-            )
+                for seriesExpense in seriesExpenses {
+                    try await CloudantStore.shared.delete(
+                        seriesExpense
+                    )
+                    modelContext.delete(seriesExpense)
+                }
 
-            try TrackedItemLinkService
-                .unlinkItems(
-                    linkedTo: expenseIDs,
-                    in: modelContext
-                )
+                try modelContext.save()
 
-            for seriesExpense in seriesExpenses {
-                modelContext.delete(seriesExpense)
+                for imageIdentifier in imageIdentifiers {
+                    removeImageIfUnreferenced(imageIdentifier)
+                }
+            } catch {
+                modelContext.rollback()
+                operationError = error.localizedDescription
             }
-
-            try modelContext.save()
-
-            for imageIdentifier
-                in imageIdentifiers {
-                removeImageIfUnreferenced(
-                    imageIdentifier
-                )
-            }
-        } catch {
-            modelContext.rollback()
-            operationError = error.localizedDescription
         }
     }
 
