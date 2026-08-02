@@ -53,4 +53,5 @@ enum AppPreferenceKeys {
     static let appearance = "preferences.appearance"
     static let defaultCategory = "preferences.defaultCategory"
     static let defaultRecurrence = "preferences.defaultRecurrence"
+    static let cloudantGatewayURL = "cloudant.gatewayURL"
 }

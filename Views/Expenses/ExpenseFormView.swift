@@ -346,43 +346,52 @@ struct ExpenseFormView: View {
         let endDate = recurrence.isRecurring
             ? recurrenceEndDate
             : nil
-        var savedImageIdentifier: String?
 
-        do {
-            if let imageData {
-                savedImageIdentifier =
-                    try ExpenseImageStore.shared.save(
-                        imageData
+        Task {
+            var savedImageIdentifier: String?
+            var remoteExpenses: [Expense] = []
+
+            do {
+                if let imageData {
+                    savedImageIdentifier =
+                        try ExpenseImageStore.shared.save(
+                            imageData
+                        )
+                }
+
+                for occurrenceDate in recurrenceDates {
+                    let expense = Expense(
+                        title: normalizedTitle,
+                        amountInCents: amountInCents,
+                        date: occurrenceDate,
+                        category: category,
+                        notes: normalizedNotes,
+                        recurrence: recurrence,
+                        seriesID: seriesID,
+                        endDate: endDate,
+                        customSymbolName: customSymbolName,
+                        imageIdentifier:
+                            savedImageIdentifier
                     )
-            }
 
-            for occurrenceDate in recurrenceDates {
-                let expense = Expense(
-                    title: normalizedTitle,
-                    amountInCents: amountInCents,
-                    date: occurrenceDate,
-                    category: category,
-                    notes: normalizedNotes,
-                    recurrence: recurrence,
-                    seriesID: seriesID,
-                    endDate: endDate,
-                    customSymbolName: customSymbolName,
-                    imageIdentifier:
-                        savedImageIdentifier
+                    try await CloudantStore.shared.save(expense)
+                    remoteExpenses.append(expense)
+                    modelContext.insert(expense)
+                }
+
+                try modelContext.save()
+                dismiss()
+            } catch {
+                for expense in remoteExpenses {
+                    try? await CloudantStore.shared.delete(expense)
+                }
+                modelContext.rollback()
+                ExpenseImageStore.shared.delete(
+                    savedImageIdentifier
                 )
-
-                modelContext.insert(expense)
+                isSaving = false
+                saveError = error.localizedDescription
             }
-
-            try modelContext.save()
-            dismiss()
-        } catch {
-            modelContext.rollback()
-            ExpenseImageStore.shared.delete(
-                savedImageIdentifier
-            )
-            isSaving = false
-            saveError = error.localizedDescription
         }
     }
 }

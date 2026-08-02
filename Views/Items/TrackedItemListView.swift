@@ -435,20 +435,24 @@ struct TrackedItemListView: View {
     ) {
         let imageIdentifier =
             item.imageIdentifier
-        modelContext.delete(item)
-
-        do {
-            try modelContext.save()
-            AppImageReferenceService
-                .deleteIfUnreferenced(
-                    identifier:
-                        imageIdentifier,
-                    in: modelContext
-                )
-        } catch {
-            modelContext.rollback()
-            operationError =
-                error.localizedDescription
+        Task {
+            do {
+                for usage in item.usages {
+                    try await CloudantStore.shared.delete(usage)
+                }
+                try await CloudantStore.shared.delete(item)
+                modelContext.delete(item)
+                try modelContext.save()
+                AppImageReferenceService
+                    .deleteIfUnreferenced(
+                        identifier:
+                            imageIdentifier,
+                        in: modelContext
+                    )
+            } catch {
+                modelContext.rollback()
+                operationError = error.localizedDescription
+            }
         }
     }
 }

@@ -929,35 +929,40 @@ struct TrackedItemDetailView: View {
     private func deleteUsage(
         _ usage: UsageRecord
     ) {
-        modelContext.delete(usage)
-
-        do {
-            try modelContext.save()
-        } catch {
-            modelContext.rollback()
-            operationError =
-                error.localizedDescription
+        Task {
+            do {
+                try await CloudantStore.shared.delete(usage)
+                modelContext.delete(usage)
+                try modelContext.save()
+            } catch {
+                modelContext.rollback()
+                operationError = error.localizedDescription
+            }
         }
     }
 
     private func deleteItem() {
         let imageIdentifier =
             item.imageIdentifier
-        modelContext.delete(item)
-
-        do {
-            try modelContext.save()
-            AppImageReferenceService
-                .deleteIfUnreferenced(
-                    identifier:
-                        imageIdentifier,
-                    in: modelContext
-                )
-            dismiss()
-        } catch {
-            modelContext.rollback()
-            operationError =
-                error.localizedDescription
+        Task {
+            do {
+                for usage in item.usages {
+                    try await CloudantStore.shared.delete(usage)
+                }
+                try await CloudantStore.shared.delete(item)
+                modelContext.delete(item)
+                try modelContext.save()
+                AppImageReferenceService
+                    .deleteIfUnreferenced(
+                        identifier:
+                            imageIdentifier,
+                        in: modelContext
+                    )
+                dismiss()
+            } catch {
+                modelContext.rollback()
+                operationError = error.localizedDescription
+            }
         }
     }
 }
@@ -1183,13 +1188,16 @@ private struct TrackedItemStatusEditorView:
                     : nil
         }
 
-        do {
-            try modelContext.save()
-            dismiss()
-        } catch {
-            modelContext.rollback()
-            saveError = error.localizedDescription
-            isSaving = false
+        Task {
+            do {
+                try await CloudantStore.shared.save(item)
+                try modelContext.save()
+                dismiss()
+            } catch {
+                modelContext.rollback()
+                saveError = error.localizedDescription
+                isSaving = false
+            }
         }
     }
 }

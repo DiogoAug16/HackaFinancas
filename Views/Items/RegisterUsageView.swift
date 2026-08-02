@@ -175,15 +175,18 @@ struct RegisterUsageView: View {
             notes: normalizedNotes,
             item: item
         )
-        modelContext.insert(usage)
 
-        do {
-            try modelContext.save()
-            dismiss()
-        } catch {
-            modelContext.rollback()
-            saveError = error.localizedDescription
-            isSaving = false
+        Task {
+            do {
+                try await CloudantStore.shared.save(usage)
+                modelContext.insert(usage)
+                try modelContext.save()
+                dismiss()
+            } catch {
+                modelContext.rollback()
+                saveError = error.localizedDescription
+                isSaving = false
+            }
         }
     }
 }

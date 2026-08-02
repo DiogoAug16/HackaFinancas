@@ -5,12 +5,16 @@ import SwiftUI
 struct HackaFinancasApp: App {
     private let modelContainer: ModelContainer = {
         do {
+            let configuration = ModelConfiguration(
+                isStoredInMemoryOnly: true
+            )
             return try ModelContainer(
                 for:
                     Expense.self,
                     IncomeEntry.self,
                     TrackedItem.self,
-                    UsageRecord.self
+                    UsageRecord.self,
+                configurations: configuration
             )
         } catch {
             fatalError(
@@ -22,18 +26,12 @@ struct HackaFinancasApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
-                .onAppear {
-                    seedIfEmpty()
+                .task {
+                    try? await CloudantStore.shared.reload(
+                        into: modelContainer.mainContext
+                    )
                 }
         }
         .modelContainer(modelContainer)
-    }
-
-    private func seedIfEmpty() {
-        let context = modelContainer.mainContext
-        let fetchDescriptor = FetchDescriptor<Expense>()
-        if (try? context.fetchCount(fetchDescriptor)) == 0 {
-            DatabaseSeeder.shared.seedSampleData(modelContext: context)
-        }
     }
 }

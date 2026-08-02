@@ -18,6 +18,7 @@ final class Expense {
     var endDate: Date?
     var customSymbolName: String?
     var imageIdentifier: String?
+    var cloudantRevision: String?
 
     init(
         title: String,
@@ -48,6 +49,7 @@ final class Expense {
         self.endDate = endDate
         self.customSymbolName = customSymbolName
         self.imageIdentifier = imageIdentifier
+        self.cloudantRevision = nil
     }
 
     var category: ExpenseCategory {

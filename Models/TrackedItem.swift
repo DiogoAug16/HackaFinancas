@@ -21,6 +21,7 @@ final class TrackedItem {
     var customSymbolName: String?
     var imageIdentifier: String?
     var sourceExpenseID: UUID?
+    var cloudantRevision: String?
 
     @Relationship(
         deleteRule: .cascade,
@@ -70,6 +71,7 @@ final class TrackedItem {
             customSymbolName
         self.imageIdentifier = imageIdentifier
         self.sourceExpenseID = sourceExpenseID
+        self.cloudantRevision = nil
         self.usages = usages
     }
 

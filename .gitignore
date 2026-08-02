@@ -15,3 +15,17 @@ xcuserdata/
 
 # VS Code
 .vscode/
+
+# Node-RED / Cloudant credentials and local state
+Services/node-red/.env
+Services/node-red/data/
+Services/node-red/node_modules/
+Services/node-red/.config*.json*
+Services/node-red/.flows*.backup
+Services/node-red/flows_*.json
+
+.env
+Secrets.xcconfig
+**/Info.plist
+
+HackaFinancas-Info.plist

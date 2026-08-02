@@ -8,8 +8,8 @@
 
 # Controle Gastos
 
-Aplicativo iOS de finanças pessoais e consumo consciente feito com SwiftUI
-e SwiftData, com dados armazenados localmente no aparelho.
+Aplicativo iOS de finanças pessoais e consumo consciente feito com SwiftUI.
+O IBM Cloudant é a fonte principal dos dados.
 
 ## Funcionalidades
 
@@ -50,10 +50,10 @@ Os testes podem ser executados pelo scheme `HackaFinancas` no Xcode.
 
 ## Dados e imagens
 
-Entradas, despesas, itens e usos ficam no SwiftData. As imagens selecionadas são
-reduzidas, sem os metadados do arquivo original, e salvas em Application
-Support. Séries recorrentes e compras vinculadas podem referenciar o mesmo
-arquivo para evitar duplicação.
+Entradas, despesas, itens e usos são documentos no banco Cloudant
+`hackafinancas`. O SwiftData mantém somente uma cópia em memória para as telas.
+As imagens são reduzidas antes de seguir com o documento e são reconstituídas
+no cache do aparelho.
 
 O vínculo registra a origem financeira do item e impede um segundo
 lançamento da mesma compra. Depois do cadastro, gasto e item podem ser
@@ -62,6 +62,13 @@ editados de forma independente.
 Antes de distribuir uma atualização sobre uma versão já instalada, valide
 a migração abrindo no simulador ou aparelho uma base criada pela versão
 anterior.
+
+## Gateway para banco não relacional
+
+O serviço [Node-RED](Services/node-red/README.md) faz a ponte entre o app e o
+IBM Cloudant. As credenciais ficam somente no ambiente do serviço, nunca no
+aplicativo iOS. Em **Configurações > Cloudant**, informe a URL do computador
+do laboratório, por exemplo `http://192.168.0.10:1880`, e carregue os dados.
 
 ## Inteligência financeira
 

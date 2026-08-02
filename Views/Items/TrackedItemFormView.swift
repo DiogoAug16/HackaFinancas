@@ -523,7 +523,8 @@ struct TrackedItemFormView: View {
         isSaving = true
         var createdImageIdentifier: String?
 
-        do {
+        Task {
+            do {
             var linkedExpense =
                 try findLinkedExpense()
 
@@ -604,6 +605,7 @@ struct TrackedItemFormView: View {
                     imageIdentifier:
                         finalImageIdentifier
                 )
+                try await CloudantStore.shared.save(expense)
                 modelContext.insert(expense)
                 linkedExpense = expense
             } else if item == nil,
@@ -613,6 +615,9 @@ struct TrackedItemFormView: View {
                     customSymbolName
                 linkedExpense.imageIdentifier =
                     finalImageIdentifier
+                try await CloudantStore.shared.save(
+                    linkedExpense
+                )
             }
 
             if let item {
@@ -637,6 +642,7 @@ struct TrackedItemFormView: View {
                     item.imageIdentifier =
                         finalImageIdentifier
                 }
+                try await CloudantStore.shared.save(item)
             } else {
                 let newItem = TrackedItem(
                     name: normalizedName,
@@ -660,6 +666,7 @@ struct TrackedItemFormView: View {
                     sourceExpenseID:
                         linkedExpense?.id
                 )
+                try await CloudantStore.shared.save(newItem)
                 modelContext.insert(newItem)
             }
 
@@ -677,18 +684,19 @@ struct TrackedItemFormView: View {
             }
 
             dismiss()
-        } catch {
-            modelContext.rollback()
+            } catch {
+                modelContext.rollback()
 
-            AppImageReferenceService
-                .deleteIfUnreferenced(
-                    identifier:
-                        createdImageIdentifier,
-                    in: modelContext
-                )
+                AppImageReferenceService
+                    .deleteIfUnreferenced(
+                        identifier:
+                            createdImageIdentifier,
+                        in: modelContext
+                    )
 
-            saveError = error.localizedDescription
-            isSaving = false
+                saveError = error.localizedDescription
+                isSaving = false
+            }
         }
     }
 

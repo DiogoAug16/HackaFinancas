@@ -32,6 +32,9 @@ struct SettingsView: View {
     @AppStorage(AppPreferenceKeys.defaultRecurrence)
     private var defaultRecurrenceRawValue = FinancialRecurrence.once.rawValue
 
+    @AppStorage(AppPreferenceKeys.cloudantGatewayURL)
+    private var cloudantGatewayURL = CloudantStore.defaultGatewayURL
+
     private var appearance: AppAppearance {
         AppAppearance(rawValue: appearanceRawValue) ?? .system
     }
@@ -107,8 +110,8 @@ struct SettingsView: View {
     }
 
     @Environment(\.modelContext) private var modelContext
-    @State private var showingSeedConfirmation = false
-    @State private var seedMessage: String?
+    @State private var cloudantMessage: String?
+    @State private var isReloadingCloudant = false
 
     var body: some View {
         NavigationStack {
@@ -118,9 +121,9 @@ struct SettingsView: View {
                     spacing: 18
                 ) {
                     header
-                    localSummary
+                    cloudantSummary
                     preferencesSection
-                    testDataSection
+                    cloudantSection
                     privacySection
                     aboutSection
 
@@ -188,14 +191,14 @@ struct SettingsView: View {
         .padding(.top, 8)
     }
 
-    private var localSummary: some View {
+    private var cloudantSummary: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("Resumo local")
+                    Text("Resumo Cloudant")
                         .font(.headline)
 
-                    Text("Seus dados neste aparelho")
+                    Text("Dados carregados do banco principal")
                         .font(.caption)
                         .foregroundStyle(
                             .white.opacity(0.82)
@@ -425,37 +428,51 @@ struct SettingsView: View {
         )
     }
 
-    private var testDataSection: some View {
+    private var cloudantSection: some View {
         settingsSection(
-            title: "Banco de Dados de Teste"
+            title: "Cloudant"
         ) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 13) {
-                    preferenceIcon(systemName: "cylinder.split.1x2.fill")
+                    preferenceIcon(systemName: "network")
 
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Gerar Dados Fictícios")
+                        Text("URL do gateway")
                             .font(.subheadline.weight(.semibold))
 
-                        Text("Popula o app com gastos, salários e compras de teste para demonstrar gráficos e previsões.")
+                        Text("Use o endereço do computador que executa o Node-RED no laboratório.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
 
+                TextField(
+                    "http://192.168.0.10:1880",
+                    text: $cloudantGatewayURL
+                )
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .textFieldStyle(.roundedBorder)
+                .keyboardType(.URL)
+
                 Button {
-                    DatabaseSeeder.shared.seedSampleData(modelContext: modelContext, clearExisting: false)
-                    seedMessage = "Dados de teste adicionados com sucesso!"
+                    reloadCloudant()
                 } label: {
-                    Label("Carregar Dados de Teste", systemImage: "plus.square.on.square")
+                    Label(
+                        isReloadingCloudant
+                            ? "Carregando dados..."
+                            : "Carregar dados do Cloudant",
+                        systemImage: "arrow.triangle.2.circlepath"
+                    )
                         .font(.headline)
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity, minHeight: 44)
                         .background(AppStyle.mintStrong, in: RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
+                .disabled(isReloadingCloudant)
 
-                if let msg = seedMessage {
+                if let msg = cloudantMessage {
                     Text(msg)
                         .font(.caption.bold())
                         .foregroundStyle(AppStyle.accentForeground(colorScheme))
@@ -474,11 +491,11 @@ struct SettingsView: View {
                 )
 
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("Dados no seu aparelho")
+                    Text("Dados no Cloudant")
                         .font(.subheadline.weight(.semibold))
 
                     Text(
-                        "Nesta versão, despesas, entradas, itens e usos ficam salvos localmente. O app não envia seu histórico financeiro ou de consumo para servidores externos."
+                        "Despesas, entradas, itens e usos ficam no Cloudant. Este aparelho mantém apenas uma cópia temporária para mostrar as telas."
                     )
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -487,6 +504,24 @@ struct SettingsView: View {
                         vertical: true
                     )
                 }
+            }
+        }
+    }
+
+    private func reloadCloudant() {
+        isReloadingCloudant = true
+        cloudantMessage = nil
+
+        Task {
+            defer { isReloadingCloudant = false }
+
+            do {
+                try await CloudantStore.shared.reload(
+                    into: modelContext
+                )
+                cloudantMessage = "Dados carregados do Cloudant."
+            } catch {
+                cloudantMessage = error.localizedDescription
             }
         }
     }
